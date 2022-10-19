@@ -4,7 +4,7 @@
 #include "QThread"
 
 static QList<QSerialPortInfo> portList;
-dataList list;
+dataList PacketList;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -14,29 +14,20 @@ MainWindow::MainWindow(QWidget *parent) :
     for (int i=0;i<portList.length();i++)
         ui->portBox->addItem(portList[i].portName());
 }
-
+// =========================================================================================================================
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
-
-
+// =========================================================================================================================
 void MainWindow::readyRead()
 {
-//    QByteArray data;
     QByteArray readBuffer;
     readBuffer = comPort.readAll();
-//    int count = readBuffer.count();
-//    qDebug()<<"readBuffer: "<<readBuffer.toHex();
-//    for(uint i =0;i<sizeof (readBuffer);i++) qDebug()<<"byte: "<<readBuffer.at(i).toHex();
-//    qDebug()<<"readBuffer: "<<readBuffer.length();
     if(readBuffer.count()== 6) Respond(readBuffer);
-//    else
-//    {
-        readBuffer = NULL;
-        comPort.flush();
-//    }
+    readBuffer = NULL;
+    comPort.flush();
+
 
 //    qDebug()<<"HEX: "<<data.toHex();
 //    qDebug()<<"raw: "<<data;
@@ -63,39 +54,47 @@ void MainWindow::readyRead()
 //        recievedData = NULL;
 
 }
-
+// =========================================================================================================================
 void MainWindow::Respond(QByteArray request)
 {
-    int rowCount = sizeof(list.Requests) / sizeof(list.Requests[0]);
-    for(int i=0;i<rowCount;i++){
-        int elementLength = sizeof(list.Requests[i]) / sizeof(int8_t);
-        QByteArray element = Array2QArray(list.Requests[i],elementLength);
-//        qDebug()<<"resp: "<<sizeof (element)<<"--"<<element;
-//        qDebug()<<"requ: "<<sizeof (request)<<"--"<<  request;
+    int relayRowCount = sizeof(PacketList.RelayRequests) / sizeof(PacketList.RelayRequests[0]);
+    int mainboardRowCount = sizeof(PacketList.MainboardRequests) / sizeof(PacketList.MainboardRequests[0]);
+    for(int i=0;i<relayRowCount;i++){
+        int elementLength = sizeof(PacketList.RelayRequests[i]) / sizeof(uint8_t);
+        QByteArray element = Array2QArray(PacketList.RelayRequests[i],elementLength);
         if (request == element)
         {
-//
-            ui->monitorBox->insert(request.toHex());
-            ui->monitorBox->insert("\r\n\t");
-            QByteArray response = Array2QArray(list.Responses[i],elementLength);
+            QByteArray response = Array2QArray(PacketList.RelayResponses[i],elementLength);
             QByteArray responseWithCRC = ModbusCRC(response);
             qDebug()<<"resp: "<<responseWithCRC.toHex();
+            ui->monitorBox->append("Relay Request: "+request.toHex()+", Response: "+responseWithCRC.toHex());
+            comPort.write(responseWithCRC);
+        }
+    }
+    for(int i=0;i<mainboardRowCount;i++){
+        int elementLength = sizeof(PacketList.MainboardRequests[i]) / sizeof(uint8_t);
+        QByteArray element = Array2QArray(PacketList.MainboardRequests[i],elementLength);
+        if (request == element)
+        {
+            QByteArray response = Array2QArray(PacketList.MainboardResponses[i],elementLength);
+            QByteArray responseWithCRC = ModbusCRC(response);
+            qDebug()<<"resp: "<<responseWithCRC.toHex();
+            ui->monitorBox->append("Mainboard Request: "+request.toHex()+", Response: "+responseWithCRC.toHex());
             comPort.write(responseWithCRC);
         }
     }
 }
-
-QByteArray MainWindow::Array2QArray(int8_t *input, int size)
+// =========================================================================================================================
+QByteArray MainWindow::Array2QArray(uint8_t *input, int size)
 {
     QByteArray result;
     for (int i = 0; i < size; i++)
     {
-        result.append((const char*)(input+i), sizeof(int8_t));
+        result.append((const char*)(input+i), sizeof(uint8_t));
     }
     return  result;
 }
-
-
+// =========================================================================================================================
 void MainWindow::on_connectButton_clicked()
 {
     comPort.setPortName(ui->portBox->currentText());// ttyUSB0
@@ -112,10 +111,9 @@ void MainWindow::on_connectButton_clicked()
     {
         ui->statusBar->showMessage("connected successfully");
         buffer.clear();
-//        comPort.write("CV 3F\r\n");
     }
 }
-
+// =========================================================================================================================
 void MainWindow::on_disconnectButton_clicked()
 {
     if (comPort.isOpen())
@@ -123,15 +121,14 @@ void MainWindow::on_disconnectButton_clicked()
     buffer.clear();
     ui->statusBar->showMessage("disconnected successfully");
 }
-
+// =========================================================================================================================
 void MainWindow::on_refreshButton_clicked()
 {
     portList = QSerialPortInfo::availablePorts();
     for (int i=0;i<portList.length();i++)
         ui->portBox->addItem(portList[i].portName());
 }
-
-
+// =========================================================================================================================
 //void MainWindow::on_getSampleButton_clicked()
 //{
 //    buffer.clear();
@@ -142,7 +139,7 @@ void MainWindow::on_refreshButton_clicked()
 //    connect(&timer,SIGNAL(timeout()),this,SLOT(SendMessageSamples()));
 //    //isSampleButtonPressed = true;
 //}
-
+// =========================================================================================================================
 //void MainWindow::on_getSecondsButtons_clicked()
 //{
 //    buffer.clear();
@@ -153,7 +150,7 @@ void MainWindow::on_refreshButton_clicked()
 //    connect(&timer,SIGNAL(timeout()),this,SLOT(SendMessageSeconds()));
 //    //isSampleButtonPressed = false;
 //}
-
+// =========================================================================================================================
 //void MainWindow::SendMessageSamples()
 //{
 //    comPort.write("QR\r\n");
@@ -161,7 +158,7 @@ void MainWindow::on_refreshButton_clicked()
 //    if (samples<=0)
 //        timer.stop();
 //}
-
+// =========================================================================================================================
 //void MainWindow::SendMessageSeconds()
 //{
 //    comPort.write("QR\r\n");
@@ -169,8 +166,7 @@ void MainWindow::on_refreshButton_clicked()
 //    if (fullTimeMilliseconds<=0)
 //        timer.stop();
 //}
-
-
+// =========================================================================================================================
 void MainWindow::on_saveButton_clicked()
 {
     QFileDialog *dlg = new QFileDialog();
@@ -186,14 +182,13 @@ void MainWindow::on_saveButton_clicked()
     file.write(buffer);
     file.close();
 }
-
-
+// =========================================================================================================================
 void MainWindow::on_clearButton_clicked()
 {
     ui->monitorBox->clear();
     buffer = NULL;
 }
-
+// =========================================================================================================================
 QByteArray MainWindow::ModbusCRC(QByteArray data)
 {
         unsigned int crc = 0xFFFF;

@@ -26,24 +26,18 @@ public:
 
     uint8_t baudRate;
     void Respond(QByteArray request);
-
     QByteArray recievedData;
-    QByteArray Array2QArray(int8_t *input,int size);
+    QByteArray Array2QArray(uint8_t *input,int size);
 private slots:
     void readyRead();
-
     void on_connectButton_clicked();
-
     void on_refreshButton_clicked();
-
     void on_disconnectButton_clicked();
-
 //    void on_getSecondsButtons_clicked();
 //    void on_getSampleButton_clicked();
 //    void SendMessageSamples();
 //    void SendMessageSeconds();
     void on_saveButton_clicked();
-
     void on_clearButton_clicked();
     QByteArray ModbusCRC(QByteArray data);
 
