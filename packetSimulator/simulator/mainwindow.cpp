@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     portList = QSerialPortInfo::availablePorts();
 //    for (int i=0;i<portList.length();i++)
 //        ui->portBox->addItem(portList[i].portName());
-       ui->portBox->addItem("COM6");
+       ui->portBox->addItem("COM21");
 
 }
 // =========================================================================================================================
@@ -88,7 +88,7 @@ void MainWindow::Respond(QByteArray request)
         {
             QByteArray response = Array2QArray(PacketList.MainboardResponses[i],elementLength);
             QByteArray responseWithCRC = ModbusCRC(response);
-            qDebug()<<"resp: "<<responseWithCRC.toHex();
+//            qDebug()<<"resp: "<<responseWithCRC.toHex();
             ui->monitorBox->append("Mainboard Request: "+request.toHex()+", Response: "+responseWithCRC.toHex());
             comPort.write(responseWithCRC);
         }
