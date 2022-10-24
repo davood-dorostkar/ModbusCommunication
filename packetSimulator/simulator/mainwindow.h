@@ -39,10 +39,6 @@ private slots:
     void on_connectButton_clicked();
     void on_refreshButton_clicked();
     void on_disconnectButton_clicked();
-//    void on_getSecondsButtons_clicked();
-//    void on_getSampleButton_clicked();
-//    void SendMessageSamples();
-//    void SendMessageSeconds();
     void on_saveButton_clicked();
     void on_clearButton_clicked();
     QByteArray ModbusCRC(QByteArray data);
@@ -50,10 +46,6 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QByteArray buffer;
-//    int fullTimeMilliseconds;
-//    int interval;
-//    int samples;
-//    bool isSampleButtonPressed;
     int cursorPosition;
 };
 

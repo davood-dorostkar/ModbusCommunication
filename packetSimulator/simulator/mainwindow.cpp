@@ -14,21 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
     portList = QSerialPortInfo::availablePorts();
 //    for (int i=0;i<portList.length();i++)
 //        ui->portBox->addItem(portList[i].portName());
-       ui->portBox->addItem("COM21");
-// qDebug()<<"buffer:"<<_dataBuffer.toHex();
-//        QByteArray comportData;
-//       uint8_t testData[]= {0xB1, 0x00, 0xB2, 0x00};
+       ui->portBox->addItem("COM6");
 
-//       QByteArray replay= QByteArray(reinterpret_cast<const char*>(testData), sizeof(testData));
-
-//       if(replay==comportData)
-//       {
-
-//       }
-//        QMap<int32_t,int> map;
-//        map.insert(1,3);
-//        qDebug()<< map[1];
-//        map.insert()
 }
 // =========================================================================================================================
 MainWindow::~MainWindow()
@@ -44,75 +31,37 @@ void MainWindow::readyRead()
     _dataBuffer.append(comPort.readAll());
     qDebug()<<"buffer:"<<_dataBuffer.toHex();
 
-    if(_dataBuffer.count()<8)return;
-    if(_dataBuffer.count()>32) _dataBuffer.remove(0,8);
+    if(_dataBuffer.count()<7) return;
+
     int packetIndex=-1;
-for(int i=0;i<_dataBuffer.length()-8;i++)
+for(int i=0;i<_dataBuffer.length()-7;i++)
 {
     if(PacketIsValid(_dataBuffer.mid(i,8)))
     {
-        qDebug()<<"valid packet:"<<_dataBuffer.mid(i,8).toHex();
+//        qDebug()<<"valid packet="<<_dataBuffer.mid(i,8).toHex();
         validPackets.append(_dataBuffer.mid(i,8));
-//        Respond(_dataBuffer.mid(i,8));
-        Respond(_samplePacket);
+        Respond(_dataBuffer.mid(i,8));
         packetIndex=i;
-        break;
     }
+
 
 }
 if(packetIndex>=0)
 {
     _dataBuffer= _dataBuffer.remove(0,packetIndex+8);
-     qDebug()<<"remain packet:"<<_dataBuffer.toHex();
+//     qDebug()<<"remain packet:"<<_dataBuffer.toHex();
 
 }
-
-//ProcessPackets(validPackets);
-
-
-
-//    QByteArray readBuffer;
-//    readBuffer = comPort.readAll();
-//    if(readBuffer.count()== 6) Respond(readBuffer);
-//    readBuffer = NULL;
-//    comPort.flush();
-
-
-//    qDebug()<<"HEX: "<<data.toHex();
-//    qDebug()<<"raw: "<<data;
-//    qDebug()<<data;
-    //buffer.append("\n");
-//    buffer.append(data);
-//    ui->monitorBox->insert("\r\n");
-//    int length = sizeof (recievedData)/sizeof (int8_t);
-//    qDebug()<<length;
-//    if(length<6)
-//    {
-//        recievedData.append((const char*)(data), sizeof(int8_t));
-//    }
-//    else if(length==6){
-//    ui->monitorBox->insert(data);
-//    Respond(data);
-//    recievedData = NULL;
-//    }
-//    else
-//    {recievedData = NULL;}
-//        ui->monitorBox->insert("***");
-//        ui->monitorBox->insert(data.toHex());
-//        Respond(data);
-//        recievedData = NULL;
+if(_dataBuffer.count()>32) _dataBuffer.remove(0,8);
 
 }
+// =========================================================================================================================
 
 void MainWindow::ProcessPackets(QList<QByteArray> packets)
 {
-
     for(int i=0;i<packets.length();i++)
 {
-
 }
-
-
 }
 // =========================================================================================================================
 void MainWindow::Respond(QByteArray request)
@@ -191,44 +140,7 @@ void MainWindow::on_refreshButton_clicked()
     for (int i=0;i<portList.length();i++)
         ui->portBox->addItem(portList[i].portName());
 }
-// =========================================================================================================================
-//void MainWindow::on_getSampleButton_clicked()
-//{
-//    buffer.clear();
-//    timer.disconnect();
-//    samples = ui->samplesBox->value();
-//    interval=ui->intervalBox->value();
-//    timer.start(interval);
-//    connect(&timer,SIGNAL(timeout()),this,SLOT(SendMessageSamples()));
-//    //isSampleButtonPressed = true;
-//}
-// =========================================================================================================================
-//void MainWindow::on_getSecondsButtons_clicked()
-//{
-//    buffer.clear();
-//    timer.disconnect();
-//    fullTimeMilliseconds=ui->secondsBox->value();
-//    interval=ui->intervalBox->value();
-//    timer.start(interval);
-//    connect(&timer,SIGNAL(timeout()),this,SLOT(SendMessageSeconds()));
-//    //isSampleButtonPressed = false;
-//}
-// =========================================================================================================================
-//void MainWindow::SendMessageSamples()
-//{
-//    comPort.write("QR\r\n");
-//    samples--;
-//    if (samples<=0)
-//        timer.stop();
-//}
-// =========================================================================================================================
-//void MainWindow::SendMessageSeconds()
-//{
-//    comPort.write("QR\r\n");
-//    fullTimeMilliseconds -= interval;
-//    if (fullTimeMilliseconds<=0)
-//        timer.stop();
-//}
+
 // =========================================================================================================================
 void MainWindow::on_saveButton_clicked()
 {
